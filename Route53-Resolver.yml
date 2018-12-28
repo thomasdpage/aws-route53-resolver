@@ -17,9 +17,9 @@ Metadata:
       VPCCidr:
         default: "VPC CIDR Block"
       PrivateServicesACidr:
-        default: "Public Subnet A CIDR Block"
+        default: "Private Subnet A CIDR Block"
       PrivateServicesBCidr:
-        default: "Public Subnet B CIDR Block"
+        default: "Private Subnet B CIDR Block"
 Parameters: 
   VPCName:
     Description: "Name of the VPC"
