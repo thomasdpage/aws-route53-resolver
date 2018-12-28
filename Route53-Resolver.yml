@@ -89,7 +89,7 @@ Resources:
   AllowDNSSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allows DNS queries to/from OUP/VPC over Route53 Resolver
+      GroupDescription: Allows DNS queries to/from On-prem/VPC over Route53 Resolver
       SecurityGroupIngress:
         - IpProtocol: tcp
           Description: DNS from on-prem
@@ -114,3 +114,8 @@ Resources:
         - Key: Name
           Value: R53-Resolver-Inbound-A
 Outputs:
+  AllowDNSSG:
+    Description: AllowDNSSG
+    Value: !GetAtt AllowDNSSG.GroupId
+    Export:
+      Name: !Sub '${AWS::StackName}-AllowDNSSgId'
