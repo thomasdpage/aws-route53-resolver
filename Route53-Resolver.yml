@@ -85,14 +85,29 @@ Resources:
       Tags:
         - Key: "Name"
           Value: !Join [ "-", [ !Ref "VPCName", Public-Subnet-B ] ]
+## Security group for Resolver
+  AllowDNSSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows DNS queries to/from OUP/VPC over Route53 Resolver
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          Description: DNS from on-prem
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 10.0.0.0/16
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: OnPrem-allow-DNS
 ## Create the Route53 Resolver
   R53ResolverInboundEndPointA:
     Type: AWS::Route53Resolver::ResolverEndpoint
     Properties:
       Direction: Inbound
-      IpAddressRequest:
-        - !Ref BackendSubnetA
-        - !Ref BackendSubnetB
+      IpAddresses:
+        - SubnetId: !Ref PrivateServicesA
+        - SubnetId: !Ref PrivateServicesB
       SecurityGroupIds: 
         - !Ref AllowDNSSG
       Tags:
