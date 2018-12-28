@@ -101,7 +101,7 @@ Resources:
         - Key: Name
           Value: OnPrem-allow-DNS
 ## Create the Route53 Resolver
-  R53ResolverInboundEndPointA:
+  R53ResolverInbound:
     Type: AWS::Route53Resolver::ResolverEndpoint
     Properties:
       Direction: Inbound
@@ -112,7 +112,19 @@ Resources:
         - !Ref AllowDNSSG
       Tags:
         - Key: Name
-          Value: R53-Resolver-Inbound-A
+          Value: R53-Resolver-Inbound
+  R53ResolverOutbound:
+    Type: AWS::Route53Resolver::ResolverEndpoint
+    Properties:
+      Direction: Outbound
+      IpAddresses:
+        - SubnetId: !Ref PrivateServicesA
+        - SubnetId: !Ref PrivateServicesB
+      SecurityGroupIds: 
+        - !Ref AllowDNSSG
+      Tags:
+        - Key: Name
+          Value: R53-Resolver-Outbound
 Outputs:
   AllowDNSSG:
     Description: AllowDNSSG
