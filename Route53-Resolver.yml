@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: A Route53 resolver deployed in a seperate VPC
+Metadata: 
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "VPC Configuration"
+        Parameters:
+          - VPCName
+          - VPCCidr
+          - PrivateServicesACidr
+          - PrivateServicesBCidr
+    ParameterLabels:
+      VPCName:
+        default: "VPC Name"
+      VPCCidr:
+        default: "VPC CIDR Block"
+      PrivateServicesACidr:
+        default: "Public Subnet A CIDR Block"
+      PrivateServicesBCidr:
+        default: "Public Subnet B CIDR Block"
+Parameters: 
+  VPCName:
+    Description: "Name of the VPC"
+    Default: "Shared-Services"
+    Type: "String"
+  VPCCidr:
+    Description: "IP address range of VPC"
+    MinLength: "9"
+    MaxLength: "18"
+    Default: "10.160.96.0/20"
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Type: "String"
+  PrivateServicesACidr:
+    Description: "IP address range of Public Subnet A"
+    MinLength: "9"
+    MaxLength: "18"
+    Default: "10.160.97.0/24"
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Type: "String"
+  PrivateServicesBCidr:
+    Description: "IP address range of Public Subnet B"
+    MinLength: "9"
+    MaxLength: "18"
+    Default: "10.160.98.0/24"
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Type: "String"
+Resources: 
+## Base network
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref "VPCCidr"
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default
+      Tags:
+        - Key: "Name"
+          Value: !Ref "VPCName"
+  PrivateServicesA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref "VPC"
+      CidrBlock: !Ref "PrivateServicesACidr"
+      MapPublicIpOnLaunch: "True"
+      AvailabilityZone: !Select ## Ensure subnets are created in correct AZ
+        - 0
+        - Fn::GetAZs: !Ref "AWS::Region"
+      Tags:
+        - Key: "Name"
+          Value: !Join [ "-", [ !Ref "VPCName", Public-Subnet-A ] ]
+  PrivateServicesB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref "VPC"
+      CidrBlock: !Ref "PrivateServicesBCidr"
+      MapPublicIpOnLaunch: "True"
+      AvailabilityZone: !Select ## Ensure subnets are created in correct AZ
+        - 1
+        - Fn::GetAZs: !Ref "AWS::Region"
+      Tags:
+        - Key: "Name"
+          Value: !Join [ "-", [ !Ref "VPCName", Public-Subnet-B ] ]
+## Create the Route53 Resolver
+  R53ResolverInboundEndPointA:
+    Type: AWS::Route53Resolver::ResolverEndpoint
+    Properties:
+      Direction: Inbound
+      IpAddressRequest:
+        - !Ref BackendSubnetA
+        - !Ref BackendSubnetB
+      SecurityGroupIds: 
+        - !Ref AllowDNSSG
+      Tags:
+        - Key: Name
+          Value: R53-Resolver-Inbound-A
+Outputs:
