@@ -133,8 +133,8 @@ Resources:
       ResolverEndpointId: !Ref ResolverInbound
       RuleType: FORWARD
       TargetIps: 
-        - Ip: "192.168.0.2"
-        - Port: 53
+        - Ip: 192.168.0.2
+          Port: 53
       Tags:  
         - Key: Name
           Value: R53-Resolver-Outbound
